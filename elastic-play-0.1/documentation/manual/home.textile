@@ -28,7 +28,7 @@ h2. Usage
 
 p(note). Once you have included the module, it will start an Elastic Search node on Application Startup.  You can interact with the Elastic Search instance using ElasticSearch.client.  
 
-See http://www.elasticsearch.org/guide/reference/java-api/index.html 
+See "http://www.elasticsearch.org/guide/reference/java-api/index.html":http://www.elasticsearch.org/guide/reference/java-api/index.html 
 
 I highly recommend downloading the zip source file for Elastic Search and attaching it to your IDE.  This module is using v0.19.1 and the source is available here: "https://github.com/elasticsearch/elasticsearch/zipball/v0.19.2":https://github.com/elasticsearch/elasticsearch/zipball/v0.19.2
 
