@@ -19,17 +19,17 @@
 		<link>
 			<name>elastic-play-0.1</name>
 			<type>2</type>
-			<location>/home/tom/workspace-play-modules/elastic-play-0.1/app</location>
+			<location>/home/tom/workspace-play-modules/elastic-play/elastic-play-0.1/app</location>
 		</link>
 		<link>
 			<name>conf/elastic-play-0.1</name>
 			<type>2</type>
-			<location>/home/tom/workspace-play-modules/elastic-play-0.1/conf</location>
+			<location>/home/tom/workspace-play-modules/elastic-play/elastic-play-0.1/conf</location>
 		</link>
 		<link>
 			<name>public/elastic-play-0.1</name>
 			<type>2</type>
-			<location>/home/tom/workspace-play-modules/elastic-play-0.1/public</location>
+			<location>/home/tom/workspace-play-modules/elastic-play/elastic-play-0.1/public</location>
 		</link>
 	</linkedResources>
 </projectDescription>
