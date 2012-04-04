@@ -1,4 +1,6 @@
 {
+   /* This allows you to persist your Elastic Search instance state on S3. */
+   
 	"cloud" : {
 		"aws" : {
 			"access_key" : "YOUR_KEY_HERE",
