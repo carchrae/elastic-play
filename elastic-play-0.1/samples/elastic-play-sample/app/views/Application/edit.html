@@ -1,0 +1,28 @@
+#{extends 'main.html' /}
+#{set title:'Home' /}
+
+#{include 'nav.html' /}
+
+
+#{form @Application.add()}
+    <p>
+        <label for="author">Your name: </label>
+        <input type="text" name="author" id="author" value="${comment?.author}" />
+    </p>
+    <p>
+        <label for="content">Your message: </label>
+        <textarea name="content" id="content">${comment?.content}</textarea>
+    </p>
+         <input type="hidden" name="id" id="id" value="${id}" />
+   
+    <p>
+    #{if id }
+        <input type="submit" value="Update" />
+    #{/if}
+    #{else}
+        <input type="submit" value="Save" />
+    #{/else}
+    </p>
+#{/form}
+</div>
+

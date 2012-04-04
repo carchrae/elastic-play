@@ -1,0 +1,15 @@
+{
+	"cloud" : {
+		"aws" : {
+			"access_key" : "YOUR_KEY_HERE",
+			"secret_key" : "YOUR_SECRET_HERE"
+		}
+	},
+
+	"gateway" : {
+		"type" : "s3",
+		"s3" : {
+			"bucket" : "YOUR_S3_BUCKET_NAME"
+		}
+	}
+}

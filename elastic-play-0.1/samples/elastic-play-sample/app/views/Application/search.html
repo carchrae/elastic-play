@@ -1,0 +1,36 @@
+#{extends 'main.html' /}
+#{set title:'Home' /}
+
+#{include 'nav.html' /}
+
+<hr>
+#{form @Application.search()}
+    <p>
+        <label for="term">Search: </label>
+        <input type="text" name="term" id="term" value="${term}"/>
+    </p>
+    <p>
+        <input type="submit" value="Search" />
+    </p>
+#{/form}
+
+This sample uses a wildcard search.  
+See <a href="http://wiki.apache.org/lucene-java/LuceneFAQ#What_wildcard_search_support_is_available_from_Lucene.3F">Lucene Docs</a> for what works.
+
+
+<hr>
+<br>
+There were ${searchHits.totalHits()} results to your search for ${term}. 
+<ul>
+#{list searchHits.hits, as : 'result'}
+	<div class="post" >
+		<div class="post-content">
+			 Author: ${result.source.author} 
+			 <br> Content: ${result.source.content} 
+		  	 <br> <a href="@{Application.edit(result.id())}">Edit</a>  <a href="@{Application.delete(result.id())}">Delete</a>
+	  	</div>
+  	</div>          
+#{/list}
+</ul>
+</div>
+

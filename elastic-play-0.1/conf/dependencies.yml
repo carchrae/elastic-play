@@ -1,0 +1,13 @@
+self: play -> elastic-play 0.1
+
+require:
+    - play
+    - org.elasticsearch -> elasticsearch 0.19.1
+    - org.elasticsearch -> elasticsearch-cloud-aws 1.5.0
+
+repositories: 
+    - sonatype-releases: 
+        type:   iBiblio 
+        root:   "http://oss.sonatype.org/content/repositories/releases/" 
+        contains: 
+            - org.elasticsearch -> * 

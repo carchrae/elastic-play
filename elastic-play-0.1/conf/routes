@@ -1,0 +1,12 @@
+# This file defines all module routes (Higher priority routes first)
+#
+# import these routes in the main app as :
+# *     /                       module:elastic-play
+#
+# ~~~~
+
+GET     /?                      Module.index
+
+# This route provides access to the RestAPI of Elastic Search.  
+# It is only needed if you want to use tools which communicate via the REST API (such as the Head Admin UI) 
+*       /es/{<.*>path}          Elastic.restServer

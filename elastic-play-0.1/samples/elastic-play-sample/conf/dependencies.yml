@@ -1,0 +1,4 @@
+# Application dependencies
+
+require:
+    - play -> elastic-play 0.1
