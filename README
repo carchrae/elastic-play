@@ -1,0 +1,19 @@
+
+This Play Framework module creates an embedded Elastic Search instance inside a Play application.
+
+Key Features:
+
+* Fully embedded Elastic Search node
+* Exposed Elastic Search API through Play Routing (easily create a secured Elastic Search instance)
+* Using the S3 Gateway, you can run Elastic Search nodes on Heroku and save state to an S3 bucket.
+
+Limitations:
+
+* Elastic Search supports a GET with a body.  Play! does not support this.  Please use the same commands using POST.
+
+Design Goals:
+
+Care has been taken to provide a very loose coupling between Elastic Search and your Play application.  This allows you to use Elastic Search in whatever capacity you require without presuming any particular structure on your model.
+
+A sample application is included that shows how Elastic Search could be used.  
+
