@@ -1,6 +1,6 @@
-h1. {Elastic Play}
+h1. Elastic Play!
 
-p(note). This module creates an embedded Elastic Search" node inside your Play! instance.   
+p(note). This module creates an embedded "Elastic Search":http://elasticsearch.org node inside your Play! instance.   
 
 p(note). Write your module documentation in this file, possibly linking to other Textile files, and delete these notes when you are finished.
 
@@ -10,24 +10,28 @@ p(note). Briefly describe why you might want to use this module in a Play applic
 
 h2. Sample application
 
-p(note). Your module should contain a sample app in the @sample@ directory that demonstrates the module. Describe how to run the demo here.
+p(note). We've included a simple sample app that does some basic searching (and CRUD) using the Elastic Search instance.  You should be able to simply run the sample application without any special configuration.  
 
 h2. Getting started
 
-p(note). Describe any installation that is required, beyond adding and resolving the module dependency.
+p(note). No additional configuration is required to use this module.  The module depends on Elastic Search and, if you wish to use the S3 gateway, then additional AWS libraries.
 
 h2. Configuration
 
-p(note). List any configuration options that the module uses, with an @h3.@ heading for each one.
+p(note). The Elastic Search instance can be configured elasticsearch.dev.json (dev mode) and elasticsearch.prod.json (production mode).  
+
+Elastic Search is highly configurable but works 'out of the box' without any setup.  This module has attempted to use defaults that made sense for an embedded server.  Please refer to the Elastic Search "documentation":http://www.elasticsearch.org/guide/ for more configuration options.
+
+If you wish to use Elastic Search plugins with this module, you can include them in the Play! dependencies.yml file.  The AWS S3 Gateway is currently included by default.
 
 h2. Usage
 
-p(note). Explain how to use the module, and describe any routes, controllers, models or views that the module provides.
+p(note). Once you have included the module, it will start an Elastic Search node on Application Startup.  You can interact with the Elastic Search instance using ElasticSearch.client.  
 
-h2. Tags
+See "http://www.elasticsearch.org/guide/reference/java-api/index.html":http://www.elasticsearch.org/guide/reference/java-api/index.html 
 
-p(note). List any tags the module provides, with an @h3.@ heading for each one. Include the tags’ arguments.
+I highly recommend downloading the zip source file for Elastic Search and attaching it to your IDE.  This module is using v0.19.1 and the source is available here: "https://github.com/elasticsearch/elasticsearch/zipball/v0.19.2":https://github.com/elasticsearch/elasticsearch/zipball/v0.19.2
 
-h2. Commands
+h2. Elastic Search RestAPI
 
-p(note). List any commands the module provides, with an @h3.@ heading for each one. Include the commands’ options.
+This module includes a controller that passes through REST requests to Elastic Search.  This allows you to use any Elastic Search tools with the embedded instance.  
