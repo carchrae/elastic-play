@@ -18,9 +18,11 @@ p(note). No additional configuration is required to use this module.  The module
 
 h2. Configuration
 
-p(note). The Elastic Search instance can be configured elasticsearch.dev.json
+p(note). The Elastic Search instance can be configured elasticsearch.dev.json (dev mode) and elasticsearch.prod.json (production mode).  
 
-List any configuration options that the module uses, with an @h3.@ heading for each one.
+Elastic Search is highly configurable but works 'out of the box' without any setup.  This module has attempted to use defaults that made sense for an embedded server.  Please refer to the Elastic Search "documentation":http://www.elasticsearch.org/guide/ for more configuration options.
+
+If you wish to use Elastic Search plugins with this module, you can include them in the Play! dependencies.yml file.  The AWS S3 Gateway is currently included by default.
 
 h2. Usage
 
