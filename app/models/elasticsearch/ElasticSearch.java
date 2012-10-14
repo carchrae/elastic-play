@@ -12,7 +12,9 @@ import java.util.concurrent.ExecutionException;
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.beanutils.PropertyUtilsBean;
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
+import org.bouncycastle.ocsp.Req;
 import org.codehaus.groovy.util.StringUtil;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.DeserializationConfig.Feature;
@@ -50,10 +52,16 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
 import play.Logger;
+import play.cache.Cache;
+import play.mvc.Http.Header;
+import play.mvc.Http.Request;
+import play.mvc.Scope.Session;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+
+import controllers.elasticsearch.RestAPI;
 
 public class ElasticSearch {
 
@@ -61,6 +69,8 @@ public class ElasticSearch {
 	public static RestController restController;
 	public static Client client;
 	private static ObjectMapper mapper;
+
+	public static final String ES_REST_API_KEY = "es_rest_api_key";
 
 	/**
 	 * no threads is used since request is presumed to be run on same instance.
@@ -334,6 +344,40 @@ public class ElasticSearch {
 			Logger.error(e.getMessage());
 			return null;
 		}
+	}
+
+	public static void setRestApiAccess(boolean allow) {
+		Session current = Session.current();
+		if (current == null)
+			Logger.error("No current request!");
+		else {
+			Logger.debug("setRestApiAccess - "
+					+ (allow ? "allowed" : "NOT ALLOWED") + " for session"
+					+ current.getId());
+			Cache.set(ES_REST_API_KEY + Session.current().getId(), allow);
+		}
+	}
+
+	public static boolean getRestApiAccess() {
+		Session current = Session.current();
+		if (current == null) {
+			Logger.error("getRestApiAccess - no session or request");
+			return false;
+		}
+
+		String key = current.getId();
+
+		return getRestApiAccess(key);
+	}
+
+	public static boolean getRestApiAccess(String key) {
+
+		boolean allowed = BooleanUtils.isTrue(Cache.get(ES_REST_API_KEY + key,
+				Boolean.class));
+		Logger.debug("getRestApiAccess - " + (allowed ? "OK" : "NOT ALLOWED")
+				+ " for session" + key);
+
+		return allowed;
 	}
 
 }

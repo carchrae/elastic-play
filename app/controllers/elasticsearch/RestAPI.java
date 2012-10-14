@@ -1,14 +1,19 @@
 package controllers.elasticsearch;
 
 import play.*;
+import play.cache.Cache;
 import play.libs.WS;
 import play.mvc.*;
+import play.mvc.Http.Request;
+import play.mvc.Scope.Session;
+import play.mvc.results.Forbidden;
 import play.mvc.results.NotFound;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.action.search.SearchOperationThreading;
 import org.elasticsearch.action.search.SearchResponse;
@@ -41,16 +46,29 @@ public class RestAPI extends Controller {
 	 *            The queried url.
 	 * @throws IOException
 	 */
-	public static void restServer(String path) throws IOException {
+	public static void restServer(String path, String token) throws IOException {
 
 		/**
 		 * be aware that enabling this route will allow complete control over
 		 * your elastic search instance. adding some kind of security before
 		 * doing so would be a good idea.
 		 */
-		if (Play.mode.isProd())
-			throw new NotFound(
-					"The ElasticSearch REST API is not enabled in production mode by default.");
+
+		boolean allowed = false;
+
+		if (StringUtils.isNotBlank(token))
+			// try token
+			allowed = ElasticSearch.getRestApiAccess(token);
+		else
+			// try session cookie
+			allowed = ElasticSearch.getRestApiAccess();
+
+		if (!allowed) {
+			/**
+			 * simple method to add tokens
+			 */
+			throw new Forbidden("You need to be authorized to use this API.");
+		}
 
 		int requestId = counter++;
 
@@ -63,8 +81,7 @@ public class RestAPI extends Controller {
 			path = "/";
 
 		PlayRestRequest restRequest = new PlayRestRequest(request, path);
-		PlayRestChannel restChannel = new PlayRestChannel(restRequest,
-				response);
+		PlayRestChannel restChannel = new PlayRestChannel(restRequest, response);
 
 		try {
 			ElasticSearch.restController.dispatchRequest(restRequest,
@@ -99,5 +116,4 @@ public class RestAPI extends Controller {
 			Logger.debug("There are now " + running + " still running");
 
 	}
-
 }
