@@ -29,6 +29,8 @@ package models.elasticsearch;
 
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.common.Unicode;
+import org.elasticsearch.common.bytes.BytesArray;
+import org.elasticsearch.common.bytes.BytesReference;
 import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.rest.support.AbstractRestRequest;
 import org.elasticsearch.rest.support.RestUtils;
@@ -109,24 +111,8 @@ public class PlayRestRequest extends AbstractRestRequest implements
 	}
 
 	@Override
-	public byte[] contentByteArray() {
-		return content;
-	}
-
-	@Override
-	public int contentByteArrayOffset() {
-		return 0;
-	}
-
-	@Override
-	public int contentLength() {
-		return content.length;
-	}
-
-	@Override
-	public String contentAsString() {
-		return Unicode.fromBytes(contentByteArray(), contentByteArrayOffset(),
-				contentLength());
+	public BytesReference content() {
+		return new BytesArray(content);
 	}
 
 	@Override
@@ -161,4 +147,5 @@ public class PlayRestRequest extends AbstractRestRequest implements
 		}
 		return value;
 	}
+
 }

@@ -43,7 +43,9 @@ import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.node.Node;
+import org.elasticsearch.plugin.river.twitter.TwitterRiverPlugin;
 import org.elasticsearch.rest.RestController;
+import org.elasticsearch.river.twitter.TwitterRiver;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
@@ -183,17 +185,23 @@ public class ElasticSearch {
 
 	public static Map<String, Object> getById(String index, String type,
 			String id) {
+		try {
 
-		GetResponse response = getClient().prepareGet(index, type, id)
-				.execute().actionGet();
+			GetResponse response = getClient().prepareGet(index, type, id)
+					.execute().actionGet();
 
-		if (!response.exists())
+			if (!response.exists())
+				return null;
+			else
+				return response.getSource();
+		} catch (Exception e) {
+			e.printStackTrace();
+			Logger.error(e.getMessage());
 			return null;
-		else
-			return response.getSource();
+		}
 	}
 
-	private static String getJson(Object object) {
+	public static String getJson(Object object) {
 		String json = null;
 		try {
 			ObjectMapper mapper = getMapper();
@@ -245,9 +253,15 @@ public class ElasticSearch {
 		return request.execute().actionGet().id();
 	}
 
+	public static void createIndex(String index) {
+		getClient().prepareIndex(index, "").setCreate(true);
+	}
+
 	public static String saveObject(String index, String type, String id,
 			Object object) {
-		return saveJson(index, type, id, getJson(object));
+		String json = getJson(object);
+		Logger.debug("Saving: " + json);
+		return saveJson(index, type, id, json);
 	}
 
 	public static void setFieldAsGeoPoint(String fieldName) {
@@ -287,8 +301,39 @@ public class ElasticSearch {
 	public static void delete(String index, String type, String id) {
 		DeleteResponse response = ElasticSearch.client
 				.prepareDelete(index, type, id)
-				.setConsistencyLevel(writeConsistency).setRefresh(refreshOnDelete ).execute().actionGet();
+				.setConsistencyLevel(writeConsistency)
+				.setRefresh(refreshOnDelete).execute().actionGet();
 		if (response.notFound())
 			Logger.warn("Delete failed because id was not found : " + id);
 	}
+
+	public static SearchResponse findAll(int from, String... indices) {
+		try {
+			QueryBuilder query;
+			query = QueryBuilders.matchAllQuery();
+			SearchResponse searchResponse = ElasticSearch.getClient()
+					.prepareSearch(indices).setQuery(query).setFrom(from)
+					.execute().actionGet();
+			return searchResponse;
+		} catch (Exception e) {
+			Logger.error(e.getMessage());
+			return null;
+		}
+	}
+
+	public static SearchResponse search(String term, int from,
+			String... indicies) {
+		try {
+			QueryBuilder query = QueryBuilders.wildcardQuery("_all",
+					term.toLowerCase());
+			SearchResponse searchResponse = ElasticSearch.getClient()
+					.prepareSearch(indicies).setQuery(query).setFrom(from)
+					.execute().actionGet();
+			return searchResponse;
+		} catch (Exception e) {
+			Logger.error(e.getMessage());
+			return null;
+		}
+	}
+
 }
