@@ -14,7 +14,6 @@ import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.beanutils.PropertyUtilsBean;
 import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.StringUtils;
-import org.bouncycastle.ocsp.Req;
 import org.codehaus.groovy.util.StringUtil;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.DeserializationConfig.Feature;
@@ -93,7 +92,7 @@ public class ElasticSearch {
 		if (mapper == null) {
 			synchronized (client) {
 				mapper = new ObjectMapper();
-				mapper.configure(Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+				mapper.configure(Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);				
 			}
 		}
 		return mapper;
@@ -110,25 +109,36 @@ public class ElasticSearch {
 	 * @param objects
 	 */
 	public static void bulkImport(String index, String type, String idField,
-			List<Object> objects) {
+			List<?> objects) {
 
+		if (objects == null || objects.size() == 0) {
+			Logger.warn("Nothing to save");
+			return;
+		}
+		
 		BulkRequestBuilder bulk = getClient().prepareBulk();
-
 		for (int i = 0; i < objects.size(); i++) {
 			Object record = objects.get(i);
-			Map<String, Object> recordMap = getMapper().convertValue(record,
-					HashMap.class);
+
+			Map<String, Object> recordMap;
+			if (record instanceof Map)
+				recordMap = (Map<String, Object>) record;
+			else
+				recordMap = getMapper().convertValue(record, HashMap.class);
 			String id = null;
 			if (idField != null) {
-				id = getMapper().convertValue(recordMap.get(id), String.class);
+				id = getMapper().convertValue(recordMap.get(idField),
+						String.class);
 			}
+
 			IndexRequestBuilder request = getClient().prepareIndex(index, type,
 					id).setSource(recordMap);
 			bulk.add(request);
 		}
 		BulkResponse bulkResponse = bulk.execute().actionGet();
 		if (bulkResponse.hasFailures()) {
-			Logger.error("Failed to add elements");
+			Logger.error("Failed to add elements: "
+					+ bulkResponse.buildFailureMessage());
 		} else
 			Logger.info("Imported " + objects.size() + " objects");
 	}
