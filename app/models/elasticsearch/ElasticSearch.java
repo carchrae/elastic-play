@@ -4,15 +4,21 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.apache.commons.beanutils.PropertyUtilsBean;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.collections.SetUtils;
 import org.apache.commons.lang.BooleanUtils;
+import org.apache.commons.lang.ObjectUtils;
 import org.apache.commons.lang.StringUtils;
 import org.codehaus.groovy.util.StringUtil;
 import org.codehaus.jackson.JsonGenerationException;
@@ -40,6 +46,7 @@ import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.support.BaseRequestBuilder;
 import org.elasticsearch.client.Client;
+import org.elasticsearch.common.collect.Lists;
 import org.elasticsearch.index.query.IdsQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -67,7 +74,7 @@ public class ElasticSearch {
 	public static Node node;
 	public static RestController restController;
 	public static Client client;
-	private static ObjectMapper mapper;
+	public static ObjectMapper mapper;
 
 	public static final String ES_REST_API_KEY = "es_rest_api_key";
 
@@ -88,11 +95,11 @@ public class ElasticSearch {
 		return node;
 	}
 
-	private static ObjectMapper getMapper() {
+	public static ObjectMapper getMapper() {
 		if (mapper == null) {
 			synchronized (client) {
 				mapper = new ObjectMapper();
-				mapper.configure(Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);				
+				mapper.configure(Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			}
 		}
 		return mapper;
@@ -115,21 +122,13 @@ public class ElasticSearch {
 			Logger.warn("Nothing to save");
 			return;
 		}
-		
+
 		BulkRequestBuilder bulk = getClient().prepareBulk();
 		for (int i = 0; i < objects.size(); i++) {
 			Object record = objects.get(i);
 
-			Map<String, Object> recordMap;
-			if (record instanceof Map)
-				recordMap = (Map<String, Object>) record;
-			else
-				recordMap = getMapper().convertValue(record, HashMap.class);
-			String id = null;
-			if (idField != null) {
-				id = getMapper().convertValue(recordMap.get(idField),
-						String.class);
-			}
+			Map<String, Object> recordMap = convertToMap(record);
+			String id = getId(idField, recordMap);
 
 			IndexRequestBuilder request = getClient().prepareIndex(index, type,
 					id).setSource(recordMap);
@@ -141,6 +140,132 @@ public class ElasticSearch {
 					+ bulkResponse.buildFailureMessage());
 		} else
 			Logger.info("Imported " + objects.size() + " objects");
+	}
+
+	/**
+	 * efficient update of many objects. adds new records and replaces changed
+	 * ones. does not remove records.
+	 * 
+	 * @param index
+	 * @param type
+	 * @param idField
+	 *            - optional. if you don't specify this, id values will be
+	 *            auto-generated
+	 * @param objects
+	 * @return 
+	 */
+	public static int bulkUpdate(String index, String type, String idField,
+			List<?> objects) {
+
+		if (objects == null || objects.size() == 0) {
+			Logger.warn("Nothing to update");
+			return 0;
+		}
+
+		int newRecords = 0;
+		int updatedRecords = 0;
+		List<Map<String, Object>> updates = Lists.newArrayList();
+		for (int i = 0; i < objects.size(); i++) {
+			Map<String, Object> recordMap = convertToMap(objects.get(i));
+			String id = getId(idField, recordMap);
+			Map<String, Object> current = getById(index, type, id);
+			if (current == null) {
+				updates.add(recordMap);
+				newRecords++;
+			} else if (notEqual(recordMap, current)) {
+				updates.add(recordMap);
+				updatedRecords++;
+			}
+		}
+
+		Logger.info("There are " + newRecords + " new records");
+		Logger.info("There are " + updatedRecords + " changed records");
+		Logger.info("There are " + updates.size()
+				+ " total updated records out of " + objects.size()
+				+ " records");
+
+		if (updates.size() == 0) {
+			Logger.warn("Nothing changed, so no updates needed");
+			return 0;
+		}
+
+		BulkRequestBuilder bulk = getClient().prepareBulk();
+		for (Map<String, Object> recordMap : updates) {
+			String id = getId(idField, recordMap);
+			IndexRequestBuilder request = getClient().prepareIndex(index, type,
+					id).setSource(recordMap);
+			bulk.add(request);
+		}
+		BulkResponse bulkResponse = bulk.execute().actionGet();
+		if (bulkResponse.hasFailures()) {
+			Logger.error("Failed to add elements: "
+					+ bulkResponse.buildFailureMessage());
+		} else
+			Logger.info("Updated " + updates.size() + " objects");
+		
+		return updates.size();
+	}
+
+	private static boolean notEqual(Map<String, Object> a, Map<String, Object> b) {
+		Set<String> aKeySet = a.keySet();
+		Set<String> bKeySet = b.keySet();
+		Collection<String> keys = CollectionUtils
+				.intersection(aKeySet, bKeySet);
+		if (keys.size() != aKeySet.size() || keys.size() != bKeySet.size()) {
+			Logger.debug("difference in number keys");
+			return true;
+		}
+		for (String aKey : aKeySet) {
+			Object aObject = a.get(aKey);
+			Object bObject = b.get(aKey);
+			if (aObject == null && bObject == null)
+				continue;
+			else if (aObject == null && bObject != null)
+				return true;
+			else if (bObject == null && aObject != null)
+				return true;
+			else {
+				if (aObject instanceof Map && bObject instanceof Map) {
+					if (notEqual((Map) aObject, (Map) bObject))
+						return true;
+				} else {
+					try {
+						Class<? extends Object> type = aObject.getClass();
+						Object aValue = getMapper().convertValue(aObject, type);
+						Object bValue = getMapper().convertValue(bObject, type);
+						if (ObjectUtils.notEqual(aValue, bValue)) {
+							return true;
+						}
+					} catch (Exception e) {
+						Logger.warn("could not compare " + aKey
+								+ " value types a="
+								+ aObject.getClass().getSimpleName()
+								+ " and b="
+								+ bObject.getClass().getSimpleName()
+								+ " so presuming they are different");
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+	}
+
+	private static String getId(String idField, Map<String, Object> recordMap) {
+		String id = null;
+		if (idField != null) {
+			id = getMapper().convertValue(recordMap.get(idField), String.class);
+		}
+		return id;
+	}
+
+	private static Map<String, Object> convertToMap(Object record) {
+		Map<String, Object> recordMap;
+		if (record instanceof Map)
+			recordMap = (Map<String, Object>) record;
+		else
+			recordMap = getMapper().convertValue(record, HashMap.class);
+		return recordMap;
 	}
 
 	private static void convertToMap(String[] srcFields, String[] destFields,
