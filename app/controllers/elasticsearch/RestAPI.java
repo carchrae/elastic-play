@@ -46,7 +46,7 @@ public class RestAPI extends Controller {
 	 *            The queried url.
 	 * @throws IOException
 	 */
-	public static void restServer(String path, String token) throws IOException {
+	public static void restServer(String path, String token, String body) throws IOException {
 
 		/**
 		 * be aware that enabling this route will allow complete control over
@@ -80,7 +80,7 @@ public class RestAPI extends Controller {
 		if (StringUtils.isEmpty(path))
 			path = "/";
 
-		PlayRestRequest restRequest = new PlayRestRequest(request, path);
+		PlayRestRequest restRequest = new PlayRestRequest(request, path, body);
 		PlayRestChannel restChannel = new PlayRestChannel(restRequest, response);
 
 		try {

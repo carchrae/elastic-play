@@ -60,7 +60,8 @@ public class PlayRestRequest extends AbstractRestRequest implements
 
 	private String path;
 
-	public PlayRestRequest(Request request, String path) throws IOException {
+	public PlayRestRequest(Request request, String path, String body)
+			throws IOException {
 		this.playRequest = request;
 		this.path = path;
 		this.method = Method.valueOf(request.method);
@@ -70,7 +71,7 @@ public class PlayRestRequest extends AbstractRestRequest implements
 			RestUtils.decodeQueryString(request.querystring, 0, params);
 		}
 
-		String body = IO.readContentAsString(request.body);
+		body = body == null ? "" : body;
 		/**
 		 * strip out ctrl chars that break jackson
 		 */
