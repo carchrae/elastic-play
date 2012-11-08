@@ -78,7 +78,8 @@ public class PlayRestRequest extends AbstractRestRequest implements
 		if (StringUtils.isBlank(body)
 				&& "get".equals(request.method.toLowerCase())) {
 			Logger.warn("body was empty but method != GET " + request.url);
-		}
+		} else if (Logger.isDebugEnabled())
+			Logger.debug("Executing request " + path + "\nbody=" + body);
 		/**
 		 * strip out ctrl chars that break jackson
 		 */
