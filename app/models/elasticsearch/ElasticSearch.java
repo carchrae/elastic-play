@@ -496,7 +496,7 @@ public class ElasticSearch {
 	public static void setRestApiAccess(boolean allow, String key) {
 		Logger.debug("setRestApiAccess - "
 				+ (allow ? "allowed" : "NOT ALLOWED") + " for token " + key);
-		Cache.set(ES_REST_API_KEY + Session.current().getId(), allow);
+		Cache.set(ES_REST_API_KEY +key, allow);
 	}
 
 	public static boolean getRestApiAccess() {
