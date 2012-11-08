@@ -35,6 +35,7 @@ import org.elasticsearch.common.io.Streams;
 import org.elasticsearch.rest.support.AbstractRestRequest;
 import org.elasticsearch.rest.support.RestUtils;
 
+import play.Logger;
 import play.libs.IO;
 import play.mvc.Http.Header;
 import play.mvc.Http.Request;
@@ -71,7 +72,13 @@ public class PlayRestRequest extends AbstractRestRequest implements
 			RestUtils.decodeQueryString(request.querystring, 0, params);
 		}
 
-		body = body == null ? "" : body;
+		if (body == null)
+			body = IO.readContentAsString(request.body);
+
+		if (StringUtils.isBlank(body)
+				&& "get".equals(request.method.toLowerCase())) {
+			Logger.warn("body was empty but method != GET " + request.url);
+		}
 		/**
 		 * strip out ctrl chars that break jackson
 		 */

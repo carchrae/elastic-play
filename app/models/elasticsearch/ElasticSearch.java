@@ -152,7 +152,7 @@ public class ElasticSearch {
 	 *            - optional. if you don't specify this, id values will be
 	 *            auto-generated
 	 * @param objects
-	 * @return 
+	 * @return
 	 */
 	public static int bulkUpdate(String index, String type, String idField,
 			List<?> objects) {
@@ -202,7 +202,7 @@ public class ElasticSearch {
 					+ bulkResponse.buildFailureMessage());
 		} else
 			Logger.info("Updated " + updates.size() + " objects");
-		
+
 		return updates.size();
 	}
 
@@ -491,6 +491,12 @@ public class ElasticSearch {
 					+ current.getId());
 			Cache.set(ES_REST_API_KEY + Session.current().getId(), allow);
 		}
+	}
+
+	public static void setRestApiAccess(boolean allow, String key) {
+		Logger.debug("setRestApiAccess - "
+				+ (allow ? "allowed" : "NOT ALLOWED") + " for token " + key);
+		Cache.set(ES_REST_API_KEY + Session.current().getId(), allow);
 	}
 
 	public static boolean getRestApiAccess() {
